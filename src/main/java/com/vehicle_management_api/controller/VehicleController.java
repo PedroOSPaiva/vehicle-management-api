@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/vehicles")
+@RequestMapping("/api/vehicles")
 @Tag(name = "Veículos", description = "APIs de gerenciamento de veículos")
 @SecurityRequirement(name = "bearerAuth")
 public class VehicleController {

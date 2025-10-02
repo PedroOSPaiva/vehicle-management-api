@@ -1,6 +1,5 @@
 package com.vehicle_management_api.controller;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vehicle_management_api.dto.VehicleDTO;
 import com.vehicle_management_api.entity.Client;
@@ -24,8 +23,6 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
@@ -81,7 +78,7 @@ class VehicleControllerTest {
     void shouldGetAllVehicles() throws Exception {
         when(vehicleService.findAll()).thenReturn(Arrays.asList(vehicleDTO));
 
-        mockMvc.perform(get("/vehicles")
+        mockMvc.perform(get("/api/vehicles")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
@@ -92,7 +89,7 @@ class VehicleControllerTest {
     void shouldGetVehicleById() throws Exception {
         when(vehicleService.findById(1L)).thenReturn(Optional.of(vehicleDTO));
 
-        mockMvc.perform(get("/vehicles/1")
+        mockMvc.perform(get("/api/vehicles/1")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
@@ -103,7 +100,7 @@ class VehicleControllerTest {
     void shouldReturnNotFoundWhenVehicleNotFound() throws Exception {
         when(vehicleService.findById(1L)).thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/vehicles/1")
+        mockMvc.perform(get("/api/vehicles/1")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
@@ -112,7 +109,7 @@ class VehicleControllerTest {
     void shouldGetAvailableVehicles() throws Exception {
         when(vehicleService.findAvailableVehicles()).thenReturn(Arrays.asList(vehicleDTO));
 
-        mockMvc.perform(get("/vehicles/available")
+        mockMvc.perform(get("/api/vehicles/available")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
@@ -123,7 +120,7 @@ class VehicleControllerTest {
     void shouldSearchVehiclesByBrandAndModel() throws Exception {
         when(vehicleService.findByBrandAndModel("Toyota", "Corolla")).thenReturn(Arrays.asList(vehicleDTO));
 
-        mockMvc.perform(get("/vehicles/search")
+        mockMvc.perform(get("/api/vehicles/search")
                         .param("brand", "Toyota")
                         .param("model", "Corolla")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -137,10 +134,10 @@ class VehicleControllerTest {
         when(clientService.findByEmail("admin@test.com")).thenReturn(Optional.of(client));
         when(vehicleService.create(any(VehicleDTO.class), any(Client.class))).thenReturn(vehicleDTO);
 
-        mockMvc.perform(post("/vehicles")
+        mockMvc.perform(post("/api/vehicles")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(vehicleDTO)))
-                .andExpect(status().isOk()) // Seu controller retorna 200 OK, não 201 Created
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.brand").value("Toyota"));
     }
 
@@ -148,7 +145,7 @@ class VehicleControllerTest {
     void shouldUpdateVehicle() throws Exception {
         when(vehicleService.update(anyLong(), any(VehicleDTO.class))).thenReturn(Optional.of(vehicleDTO));
 
-        mockMvc.perform(put("/vehicles/1")
+        mockMvc.perform(put("/api/vehicles/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(vehicleDTO)))
                 .andExpect(status().isOk())
@@ -159,7 +156,7 @@ class VehicleControllerTest {
     void shouldReturnNotFoundWhenUpdateNonExistentVehicle() throws Exception {
         when(vehicleService.update(anyLong(), any(VehicleDTO.class))).thenReturn(Optional.empty());
 
-        mockMvc.perform(put("/vehicles/1")
+        mockMvc.perform(put("/api/vehicles/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(vehicleDTO)))
                 .andExpect(status().isNotFound());
@@ -169,7 +166,7 @@ class VehicleControllerTest {
     void shouldDeleteVehicle() throws Exception {
         when(vehicleService.delete(1L)).thenReturn(true);
 
-        mockMvc.perform(delete("/vehicles/1")
+        mockMvc.perform(delete("/api/vehicles/1")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
     }
@@ -178,9 +175,8 @@ class VehicleControllerTest {
     void shouldReturnNotFoundWhenDeleteNonExistentVehicle() throws Exception {
         when(vehicleService.delete(1L)).thenReturn(false);
 
-        mockMvc.perform(delete("/vehicles/1")
+        mockMvc.perform(delete("/api/vehicles/1")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
-
 }

@@ -17,7 +17,7 @@ import java.util.Optional;
 
 
 @RestController
-@RequestMapping("/admin/clients")
+@RequestMapping("/api/clients")
 @Tag(name = "Clientes", description = "APIs de gerenciamento de clientes (Somente administrador)")
 @SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("hasRole('ADMIN')")
@@ -40,7 +40,7 @@ public class ClientController {
         return ResponseEntity.ok(clients);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/api/clients/{id}")
     @Operation(summary = "Obter cliente por ID (Somente administrador)")
     public ResponseEntity<ClientDTO> getClientById(@PathVariable Long id) {
         logger.info("Buscando cliente por ID: {}", id);
@@ -50,7 +50,7 @@ public class ClientController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/api/clients/{id}")
     @Operation(summary = "Atualizar um cliente (Somente administrador)")
     public ResponseEntity<ClientDTO> updateClient(@PathVariable Long id,
                                                   @Valid @RequestBody ClientDTO clientDTO) {
@@ -61,7 +61,7 @@ public class ClientController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/api/clients/{id}")
     @Operation(summary = "Excluir um cliente (Somente administrador)")
     public ResponseEntity<Void> deleteClient(@PathVariable Long id) {
         logger.info("Excluindo cliente com ID: {}", id);
