@@ -24,4 +24,7 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
     List<Vehicle> findByBrandOrModelContaining(@Param("brand") String brand, @Param("model") String model);
 
     Boolean existsByLicensePlate(String licensePlate);
+
+    @Query("SELECT COUNT(v) > 0 FROM Vehicle v WHERE v.licensePlate = :licensePlate AND v.id != :id")
+    Boolean existsByLicensePlateAndIdNot(@Param("licensePlate") String licensePlate, @Param("id") Long id);
 }

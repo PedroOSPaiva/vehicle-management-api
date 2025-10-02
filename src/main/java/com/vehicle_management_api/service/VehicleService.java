@@ -25,6 +25,9 @@ public class VehicleService {
     @Autowired
     private VehicleRepository vehicleRepository;
 
+    public VehicleService(VehicleRepository vehicleRepository) {
+        this.vehicleRepository = vehicleRepository;
+    }
     @Cacheable(value = "vehicles", key = "#id")
     public Optional<VehicleDTO> findById(Long id) {
         logger.info("Buscando veículo por ID: {}", id);
@@ -64,15 +67,9 @@ public class VehicleService {
             throw new RuntimeException("Veículo com esta placa já existe");
         }
 
-        Vehicle vehicle = new Vehicle();
-        vehicle.setBrand(vehicleDTO.getBrand());
-        vehicle.setModel(vehicleDTO.getModel());
-        vehicle.setYear(vehicleDTO.getYear());
-        vehicle.setColor(vehicleDTO.getColor());
-        vehicle.setLicensePlate(vehicleDTO.getLicensePlate());
-        vehicle.setPrice(vehicleDTO.getPrice());
-        vehicle.setIsAvailable(vehicleDTO.getIsAvailable() != null ? vehicleDTO.getIsAvailable() : true);
+        Vehicle vehicle = convertToEntity(vehicleDTO);
         vehicle.setCreatedBy(createdBy);
+        vehicle.setIsAvailable(vehicleDTO.getIsAvailable() != null ? vehicleDTO.getIsAvailable() : true);
 
         Vehicle savedVehicle = vehicleRepository.save(vehicle);
         logger.info("Veículo criado com sucesso com ID: {}", savedVehicle.getId());
@@ -82,21 +79,34 @@ public class VehicleService {
     @CacheEvict(value = "vehicles", allEntries = true)
     public Optional<VehicleDTO> update(Long id, VehicleDTO vehicleDTO) {
         logger.info("Atualizando veículo com ID: {}", id);
-        return vehicleRepository.findById(id).map(existingVehicle -> {
-            existingVehicle.setBrand(vehicleDTO.getBrand());
-            existingVehicle.setModel(vehicleDTO.getModel());
-            existingVehicle.setYear(vehicleDTO.getYear());
-            existingVehicle.setColor(vehicleDTO.getColor());
-            existingVehicle.setLicensePlate(vehicleDTO.getLicensePlate());
-            existingVehicle.setPrice(vehicleDTO.getPrice());
-            if (vehicleDTO.getIsAvailable() != null) {
-                existingVehicle.setIsAvailable(vehicleDTO.getIsAvailable());
-            }
 
-            Vehicle updatedVehicle = vehicleRepository.save(existingVehicle);
-            logger.info("Veículo com ID {} atualizado com sucesso", id);
-            return convertToDTO(updatedVehicle);
-        });
+        Optional<Vehicle> existingVehicleOpt = vehicleRepository.findById(id);
+        if (existingVehicleOpt.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Vehicle existingVehicle = existingVehicleOpt.get();
+
+        // Verifica se a placa foi alterada e se já existe para outro veículo
+        if (!existingVehicle.getLicensePlate().equals(vehicleDTO.getLicensePlate()) &&
+                vehicleRepository.existsByLicensePlateAndIdNot(vehicleDTO.getLicensePlate(), id)) {
+            logger.warn("Tentativa de atualizar para placa {} que já existe", vehicleDTO.getLicensePlate());
+            throw new RuntimeException("Veículo com esta placa já existe");
+        }
+
+        existingVehicle.setBrand(vehicleDTO.getBrand());
+        existingVehicle.setModel(vehicleDTO.getModel());
+        existingVehicle.setYear(vehicleDTO.getYear());
+        existingVehicle.setColor(vehicleDTO.getColor());
+        existingVehicle.setLicensePlate(vehicleDTO.getLicensePlate());
+        existingVehicle.setPrice(vehicleDTO.getPrice());
+        if (vehicleDTO.getIsAvailable() != null) {
+            existingVehicle.setIsAvailable(vehicleDTO.getIsAvailable());
+        }
+
+        Vehicle updatedVehicle = vehicleRepository.save(existingVehicle);
+        logger.info("Veículo com ID {} atualizado com sucesso", id);
+        return Optional.of(convertToDTO(updatedVehicle));
     }
 
     @CacheEvict(value = "vehicles", allEntries = true)
@@ -109,6 +119,18 @@ public class VehicleService {
         }
         logger.warn("Veículo com ID {} não encontrado para exclusão", id);
         return false;
+    }
+
+    private Vehicle convertToEntity(VehicleDTO dto) {
+        Vehicle vehicle = new Vehicle();
+        vehicle.setBrand(dto.getBrand());
+        vehicle.setModel(dto.getModel());
+        vehicle.setYear(dto.getYear());
+        vehicle.setColor(dto.getColor());
+        vehicle.setLicensePlate(dto.getLicensePlate());
+        vehicle.setPrice(dto.getPrice());
+        vehicle.setIsAvailable(dto.getIsAvailable() != null ? dto.getIsAvailable() : true);
+        return vehicle;
     }
 
     private VehicleDTO convertToDTO(Vehicle vehicle) {
